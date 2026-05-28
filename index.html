@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Manajemen Tugas Kuliah</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px;
+    background: #f5f7fb;
+}
+
+h1 {
+    color: #1a73e8;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background: #1a73e8;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+form {
+    display: grid;
+    gap: 12px;
+    max-width: 500px;
+}
+
+input, select, textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+button {
+    padding: 12px;
+    background: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1259b5;
+}
+
+.status-belum {
+    color: red;
+    font-weight: bold;
+}
+
+.status-dikerjakan {
+    color: orange;
+    font-weight: bold;
+}
+
+.status-selesai {
+    color: green;
+    font-weight: bold;
+}
+
+.prioritas-rendah {
+    color: gray;
+}
+
+.prioritas-sedang {
+    color: orange;
+}
+
+.prioritas-tinggi {
+    color: red;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📚 Aplikasi Manajemen Tugas Kuliah</h1>
+
+<div class="card">
+    <h2>Tambah Tugas</h2>
+
+    <form id="form-tugas">
+
+        <input type="number" id="user_id" placeholder="User ID" required>
+
+        <input type="number" id="mk_id" placeholder="Mata Kuliah ID" required>
+
+        <input type="text" id="judul" placeholder="Judul Tugas" required>
+
+        <textarea id="deskripsi" placeholder="Deskripsi tugas"></textarea>
+
+        <input type="datetime-local" id="deadline" required>
+
+        <select id="prioritas">
+            <option value="rendah">Prioritas Rendah</option>
+            <option value="sedang">Prioritas Sedang</option>
+            <option value="tinggi">Prioritas Tinggi</option>
+        </select>
+
+        <select id="status">
+            <option value="belum">Belum</option>
+            <option value="dikerjakan">Dikerjakan</option>
+            <option value="selesai">Selesai</option>
+        </select>
+
+        <button type="submit">Simpan Tugas</button>
+
+    </form>
+</div>
+
+<div class="card">
+
+    <h2>Daftar Tugas</h2>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Mahasiswa</th>
+                <th>Mata Kuliah</th>
+                <th>Judul</th>
+                <th>Deadline</th>
+                <th>Prioritas</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+
+        <tbody id="tabel-tugas"></tbody>
+
+    </table>
+
+</div>
+
+<script>
+
+const API = "http://<PUBLIC_IP_EC2_BACKEND>:8000";
+
+async function loadTugas() {
+
+    const res = await fetch(API + "/tugas");
+
+    const data = await res.json();
+
+    const tbody = document.getElementById("tabel-tugas");
+
+    tbody.innerHTML = "";
+
+    data.forEach(function(t) {
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${t.mahasiswa}</td>
+                <td>${t.nama_mk}</td>
+                <td>${t.judul}</td>
+                <td>${new Date(t.deadline).toLocaleString("id-ID")}</td>
+
+                <td class="prioritas-${t.prioritas}">
+                    ${t.prioritas}
+                </td>
+
+                <td class="status-${t.status}">
+                    ${t.status}
+                </td>
+            </tr>
+        `;
+    });
+}
+
+document.getElementById("form-tugas")
+.addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const body = {
+
+        user_id: parseInt(document.getElementById("user_id").value),
+
+        mk_id: parseInt(document.getElementById("mk_id").value),
+
+        judul: document.getElementById("judul").value,
+
+        deskripsi: document.getElementById("deskripsi").value,
+
+        deadline: document.getElementById("deadline").value,
+
+        prioritas: document.getElementById("prioritas").value,
+
+        status: document.getElementById("status").value
+    };
+
+    await fetch(API + "/tugas", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify(body)
+    });
+
+    e.target.reset();
+
+    loadTugas();
+});
+
+loadTugas();
+
+</script>
+
+</body>
+</html>
